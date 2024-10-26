@@ -1,0 +1,160 @@
+from typing import Any, Dict, List, Union
+from abc import ABC, abstractmethod
+
+from langchain_community.vectorstores.faiss import FAISS
+
+class Preparer(ABC):
+    """
+    Base class for preparers.
+    Extend this class and implement __str__ and __call__ for custom preparers.
+    """
+    @abstractmethod
+    def __str__(self) -> str:
+        """
+        Returns: str: Name of the preparer.
+        """
+        pass
+
+    @abstractmethod
+    def __call__(self,
+            corpus: Dict[str, str],
+            **kwargs) -> FAISS:
+        """
+        This is called during the preparation process.
+
+        Parameters:
+            corpus: Dict[str, str]: Corpus of documents.
+                Structure: {<docid>: <text>}.
+                Example: {"doc-0": "This is a document."}
+            **kwargs: Any: Additional arguments.
+        
+        Returns: FAISS: FAISS vector store.
+        """
+        pass
+
+class Retriever(ABC):
+    """
+    Base class for retrievers.
+    Extend this class and implement __str__ and __call__ for custom retrievers.
+    """
+
+    @abstractmethod
+    def __str__(self) -> str:
+        """
+        Returns: str: Name of the retriever.
+        """
+        pass
+
+    @abstractmethod
+    def __call__(
+        self,
+        vectorstore: FAISS,
+        queries: Dict[str, str],
+        **kwargs,
+    ) -> Dict[str, Dict[str, float]]:
+        """
+        This is called during the retrieval process.
+        
+        Parameters:
+            vectorstore: FAISS: FAISS vector store.
+            queries: Dict[str, str]: Queries to search for.
+                Structure: {<qid>: <query>}.
+                Example: {"q-0": "This is a query."}
+            **kwargs: Any: Additional arguments.
+        
+        Returns: Dict[str, Dict[str, float]]: Top-k search results for each query. k is specified by search_top_k.
+            Structure: {qid: {docid: score}}. The higher is the score, the more relevant is the document.
+            Example: {"q-0": {"doc-0": 0.9}}
+        """
+        pass
+
+class Reranker(ABC):
+    """
+    Base class for rerankers.
+    Extend this class and implement __str__ and __call__ for custom rerankers.
+    """
+    def __init__(self, rerank_top_k: int = 100):
+        self.rerank_top_k = rerank_top_k
+
+    @abstractmethod
+    def __str__(self) -> str:
+        """
+        Returns: str: Name of the reranker.
+        """
+        pass
+
+    @abstractmethod
+    def __call__(
+        self,
+        corpus: Dict[str, Dict[str, Any]],
+        queries: Dict[str, str],
+        search_results: Dict[str, Dict[str, float]],
+        **kwargs,
+    ) -> Dict[str, Dict[str, float]]:
+        """
+        This is called during the reranking process.
+        
+        Parameters:
+            corpus: Dict[str, Dict[str, Any]]: Corpus of documents. 
+                Structure: {<docid>: {"text": <text>}}.
+                Example: {"doc-0": {"text": "This is a document."}}
+            queries: Dict[str, str]: Queries to search for.
+                Structure: {<qid>: <query>}.
+                Example: {"q-0": "This is a query."}
+            search_results: Dict[str, Dict[str, float]]: Search results for each query.
+                Structure: {qid: {docid: score}}. The higher is the score, the more relevant is the document.
+                Example: {"q-0": {"doc-0": 0.9}}
+            **kwargs: Any: Additional arguments.
+        
+        Returns: Dict[str, Dict[str, float]]: Reranked search results for each query. k is specified by rerank_top_k.
+            Structure: {qid: {docid: score}}. The higher is the score, the more relevant is the document.
+            Example: {"q-0": {"doc-0": 0.9}}
+        """
+        pass
+
+
+class Embedding(ABC):
+    """
+    Base class for embeddings.
+    """
+    @abstractmethod
+    def embed_documents(self, corpus: List[str]):
+        """
+        Embed documents.
+
+        Parameters:
+            corpus: List[str]: Corpus of documents.
+                Example: ["This is a document.", "This is a document."]
+        
+        Returns: np.ndarray: Embeddings of the documents.
+        """
+        pass
+
+    @abstractmethod
+    def embed_query(self, queries: List[str]):
+        """
+        Embed queries.
+
+        Parameters:
+            queries: List[str]: Queries to search for.
+                Example: ["This is a query.", "This is a query."]
+        
+        Returns: np.ndarray: Embeddings of the queries.
+        """
+        pass
+
+    @abstractmethod
+    def embed(self, texts: List[str]):
+        """
+        Embed texts.
+
+        Parameters:
+            texts: List[str]: Texts to embed.
+                Example: ["This is a document.", "This is a query."]
+        
+        Returns: np.ndarray: Embeddings of the texts.
+        """
+        pass
+
+    def __str__(self):
+        return self.name
