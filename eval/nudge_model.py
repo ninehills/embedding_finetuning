@@ -15,7 +15,7 @@ class NudgeModel(Embedding):
     def __init__(
         self,
         embed_model: Embedding,
-        use_nudge_n: bool = True,
+        nudge_type: str = "nudge-n",
         device: Optional[str] = None,
         cache_dir: str = "./cache",
     ) -> None:
@@ -32,7 +32,7 @@ class NudgeModel(Embedding):
         self.embed_model = embed_model
         self.nudge = (
             NUDGEN(device=self._target_device)
-            if use_nudge_n
+            if nudge_type == "nudge-n"
             else NUDGEM(device=self._target_device)
         )
 
@@ -69,15 +69,16 @@ class NudgeModel(Embedding):
         self.train_dataset = self._format_dataset(dataset, split="train", corpus_keys=self.corpus_keys)
         self.val_dataset = self._format_dataset(dataset, split="val", corpus_keys=self.corpus_keys)
 
+        print(f"self.corpus_embeddings[0]: {self.corpus_embeddings[0][:10]}")
         self.corpus_embeddings = self.nudge.finetune_embeddings(
-            embeddings=self.corpus_embeddings,
+            embeddings=self.corpus_embeddings.copy(),
             train_set=self.train_dataset,
             val_set=self.val_dataset,
             nontrain_embeddings=None,
             val_batch_size=256,
             gamma=None,
         )
-
+        print(f"self.corpus_embeddings[0]: {self.corpus_embeddings[0][:10]}")
     def insert_data_and_finetune(
         self,
         new_dataset: RAGDataset,

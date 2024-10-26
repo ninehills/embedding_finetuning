@@ -21,7 +21,7 @@ from eval.arguments import ModelArgs, EvalArgs
 from eval.nudge_model import NudgeModel
 @dataclass
 class NudgeArgs:
-    use_nudge_n: bool = field(default=True, metadata={"help": "Use NUDGE-N or NUDGE-M."})
+    nudge_type: str = field(default="nudge-n", metadata={"help": "Use NUDGE-N or NUDGE-M."})
     device: str = field(default="cuda", metadata={"help": "Device to use. If no GPU, set to 'cpu'."})
 
 def get_models(model_args: ModelArgs):
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     nudge_model = NudgeModel(
         embed_model=embedding_model,
         cache_dir=eval_args.cache_dir,
-        use_nudge_n=nudge_args.use_nudge_n,
+        nudge_type=nudge_args.nudge_type,
         device=nudge_args.device
     )
 

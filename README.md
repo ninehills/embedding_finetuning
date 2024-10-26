@@ -198,47 +198,17 @@ TODO
 
 ## 7. NUDGE 微调
 
+TODO: nudge-n/-m 得到的best-gamma = 0.0 导致embedding 没有变化
+
 参考 <https://github.com/szeighami/nudge> 进行 NUDGE 微调。
 
 ```bash
 PYTHONPATH="." python eval/evaluate_nudge.py \
     --dataset_path "./data/infgrad_retrieval_data_llm.json" \
-    --encoder "checkpoint/bge-small-zh-v1.5-sft" \
+    --encoder "BAAI/bge-small-zh-v1.5" \
     --query_instruction "为这个句子生成表示以用于检索相关文章：" \
     --split "val" \
     --search_top_k 10 \
-    --use_nudge_n True
-{
-    "ndcg_at_1": 0.61147,
-    "ndcg_at_3": 0.69472,
-    "ndcg_at_5": 0.71365,
-    "ndcg_at_10": 0.73091,
-    "map_at_1": 0.61147,
-    "map_at_3": 0.67397,
-    "map_at_5": 0.68447,
-    "map_at_10": 0.69166,
-    "recall_at_1": 0.61147,
-    "recall_at_3": 0.75487,
-    "recall_at_5": 0.80087,
-    "recall_at_10": 0.8539,
-    "precision_at_1": 0.61147,
-    "precision_at_3": 0.25162,
-    "precision_at_5": 0.16017,
-    "precision_at_10": 0.08539,
-    "mrr_at_1": 0.61147,
-    "mrr_at_3": 0.67397,
-    "mrr_at_5": 0.68447,
-    "mrr_at_10": 0.69166
-}
+    --nudge_type "nudge-n"
 ```
-
-ndcg@10 从 0.67399 提升到 0.73091，提升 5.7pp。和全参数微调的效果差不多。
-
-NUDGE和全参数微调的对比：
-
-- 训练时间： NUDGE 的训练其实是训练 Embedding 变换参数。
-- NUDGE 针对 Embedding 后的数据，新增数据需要重复训练。且只影响 corpus embedding，query embedding 不变。
-- SFT 需要重新部署模型。
-- NUDGE 不需要 Negative samples，SFT 如果挖掘的难负样本不好，效果不是特别好。
-
 
