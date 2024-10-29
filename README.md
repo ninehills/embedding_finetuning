@@ -252,7 +252,7 @@ PYTHONPATH="." python eval/evaluate_basic.py \
     "mrr_at_5": 0.40477,
     "mrr_at_10": 0.41658
 }
-# 可以看到 ndcg@10 从 0.32522 下降到 0.26363，这是因为模型训练集和验证集的来源不同，而且训练过程没有充分收敛，后续可以优化。
+# 可以看到 ndcg@10 从 0.32522 下降到 0.26363，这是因为模型训练集和验证集的来源不同，同时训练的效果不是很好。
 
 # 检查在非训练数据上的效果
 PYTHONPATH="." python eval/evaluate_basic.py \
