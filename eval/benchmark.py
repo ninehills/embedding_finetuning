@@ -43,7 +43,8 @@ class Benchmark():
         split: Optional[str] = None,
     ):
         self.dataset = RAGDataset.from_file(dataset_path)
-        os.makedirs(cache_dir, exist_ok=True)
+        if cache_dir:
+            os.makedirs(cache_dir, exist_ok=True)
         self.cache_dir = cache_dir
         self.split = split
         

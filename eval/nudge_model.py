@@ -45,7 +45,6 @@ class NudgeModel(Embedding):
         corpus_keys: List[str],
     ):
         query_ids = dataset.queries_split[split]
-        query_values = [dataset.queries[qid] for qid in query_ids]
         q_embs = self.embed_model.embed_query(query_values)
         
         # 创建一个字典,将corpus_keys映射到它们的索引

@@ -1,17 +1,21 @@
 # 定义评估数据集结构
 from dataclasses import dataclass, asdict, field
 from typing import Dict, List, Tuple, Optional
+from collections import OrderedDict
 import json
 import random
 import math
+import logging
+
+logger = logging.getLogger(__name__)
 
 @dataclass
 class RAGDataset:
     """RAGDataset
     """
 
-    queries: Dict[str, str] = field(default_factory=dict)  # query_id -> query
-    corpus: Dict[str, str] = field(default_factory=dict)  # corpus_id -> corpus
+    queries: OrderedDict[str, str] = field(default_factory=OrderedDict)  # query_id -> query
+    corpus: OrderedDict[str, str] = field(default_factory=OrderedDict)  # corpus_id -> corpus
     relevant_docs: Dict[str, List[str]] = field(default_factory=dict)  # query_id -> list of corpus_id, no order.
     negative_docs: Dict[str, List[str]] = field(default_factory=dict)  # query_id -> list of corpus_id, no order. for hard negative training.
     reference_answers: Dict[str, str] = field(default_factory=dict)  # query_id -> reference_answer
@@ -29,7 +33,7 @@ class RAGDataset:
     def from_file(cls, path: str) -> "RAGDataset":
         """Load json."""
         with open(path) as f:
-            data = json.load(f)
+            data = json.load(f, object_pairs_hook=OrderedDict)
         return cls(**data)
     
     def get_queries_split(self, split: Optional[str] = None) -> Dict[str, str]:
@@ -43,9 +47,10 @@ class RAGDataset:
 
         Args:
             ratio (float): 验证集占整个数据集的比例，范围应在0到1之间。
+            seed (int): 随机种子，默认为0。
 
         Returns:
-            Tuple["RAGDataset", "RAGDataset"]: 返回(训练集, 验证集)的元组。
+            None
         """
         if not 0 <= ratio <= 1:
             raise ValueError("ratio must be between 0 and 1.")
@@ -53,22 +58,23 @@ class RAGDataset:
         if seed:
             random.seed(seed)
 
-        # 获取所有查询ID
+        # 获取所有查询ID并保持原有顺序
         query_ids = list(self.queries.keys())
-        # 随机打乱查询ID
-        random.shuffle(query_ids)
-
+        
         # 计算验证集的大小
         val_size = int(len(query_ids) * ratio)
-
-        # 分割查询ID
-        val_ids = query_ids[:val_size]
-        train_ids = query_ids[val_size:]
+        
+        # 随机选择索引而不是直接打乱ID列表
+        total_indices = list(range(len(query_ids)))
+        val_indices = sorted(random.sample(total_indices, val_size))
+        train_indices = sorted(set(total_indices) - set(val_indices))
+        
+        # 根据选择的索引获取ID
+        val_ids = [query_ids[i] for i in val_indices]
+        train_ids = [query_ids[i] for i in train_indices]
 
         self.queries_split["train"] = train_ids
         self.queries_split["val"] = val_ids
-
-        return
 
     def get_train_dataset(self,
             split: Optional[str] = None,
@@ -93,7 +99,9 @@ class RAGDataset:
 
             if negative_num > 0:
                 negative_docs_ids = self.negative_docs.get(query_id, [])
-                assert len(negative_docs_ids) > 0, "No negative docs found for query_id: {}".format(query_id)
+                if len(negative_docs_ids) == 0:
+                    logger.warning("No negative docs found for query_id: {}, skip this query".format(query_id))
+                    continue
                 if len(negative_docs_ids) < negative_num:
                     # 负面样本不足，则多采样
                     num = math.ceil(negative_num / len(negative_docs_ids))

@@ -52,7 +52,7 @@ def embed_cached(embedding_model: Embedding, corpus: Dict[str, str], cache_dir: 
             corpus_embeddings = embedding_model.embed(corpus_values)
         dim = corpus_embeddings.shape[-1]
         
-        if len(corpus_embeddings) == len(corpus_keys):
+        if len(corpus_embeddings) == len(corpus_keys) and cache_dir:
             logger.info(f"saving embeddings at {embedding_save_path}...")
             memmap = np.memmap(
                 embedding_save_path,
