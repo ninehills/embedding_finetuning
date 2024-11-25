@@ -144,14 +144,18 @@ PYTHONPATH="." python eval/evaluate_basic.py \
 
 第 3 种比较适合做知识蒸馏，也就是用比较强的模型的相似度分数来训练小模型。目前基本使用第一种或第二种。
 
-TODO: 增加负样本挖掘工具。
-TODO：做三组数据，分别是 train 中的正负样本，仅正样本，自动挖掘的负样本。从而分析微调的效果。
+数据准备参考：
+
+![training.png](./training.png)
+
+
+1. Wu, T. et al. Towards Robust Text Retrieval with Progressive Learning. Preprint at http://arxiv.org/abs/2311.11691 (2023).
 
 ### 4.1 数据合成
 
 对 airbench_qa_healthcare_zh 数据集实践数据挖掘，从 corpus 中挖掘出正样本（Query和Corpus 的关联关系）。实际生产环境下，corpus 可以通过对文档的识别和切割得到，本文从略。
 
-使用 `finetune/data_synthesis.ipynb` 进行数据合成。合成后的数据集在 `data/airbench_qa_healthcare_zh_synthesis.json`，共有 9810 条QA对。 
+使用 `finetune/data_synthesis.ipynb` 进行数据合成。合成后的数据集在 `data/airbench_qa_healthcare_zh_synthesis.json`，共有 9810 条QA对。
 
 ### 4.2 难负例挖掘
 
@@ -300,3 +304,4 @@ TODO: nudge-n/-m 得到的best-gamma = 0.0 导致embedding 没有变化
 
 1. support load model as fp16
 2. support dump as onnx-int8
+3. https://github.com/gabrielchua/embedding-adapter/tree/main
